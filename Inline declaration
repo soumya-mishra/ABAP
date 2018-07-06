@@ -1,6 +1,7 @@
 SELECT case_type,ext_key from scmg_t_case_attr
   into table @data(lt_attr) where case_type = 'DEMO'.
 
+data(lr_attr) = lt_attr[  case_type = 'DEMO' ext_key = '000000005838' ].
 
  loop at lt_attr ASSIGNING FIELD-SYMBOL(<fs_attr>).
    WRITE:/ <fs_attr>-CASE_TYPE.
