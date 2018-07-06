@@ -10,3 +10,11 @@ SELECT case_type,ext_key from scmg_t_case_attr
  loop at lt_attr into data(lw_attr).
    WRITE:/ lw_attr-case_type.
  ENDLOOP.
+
+data(lv_field)  = 'DEMO'.
+
+ SELECT * from scmg_t_case_attr
+   into TABLE @data(itab) where case_type  = @lv_field.
+
+
+   Write:'Soumya'.
