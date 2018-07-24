@@ -1,0 +1,146 @@
+REPORT YSTEST.
+*
+*- type declarations
+*enum
+ DATA(lv_text) = 'Declaring variables'.
+ DATA(lv_count) = 1000.
+
+*- using value to create internal tables
+* lt_matnr is already defined as data. so only # is specified
+ data lt_matnr TYPE STANDARD TABLE OF matnr.
+ lt_matnr = VALUE #( ( 'a' ) ( 'b' ) ( 'c' ) ( 'd' ) ( 'e' ) ).
+
+*- another way of declaring same with type
+* Here t_matnr is still a type. so while assigning the value specify the type instead of #.
+ TYPES:t_matnr TYPE STANDARD TABLE OF matnr WITH DEFAULT KEY .
+ DATA(lt_data) = VALUE t_matnr( ( 'a' ) ( 'b' ) ( 'c' ) ( 'd' ) ( 'e' ) ).
+
+
+ TYPES:
+  BEGIN OF ty_data,
+    kunnr TYPE kunnr,
+    name1 TYPE name1,
+    ort01 TYPE ort01,
+    land1 TYPE land1,
+  END   OF ty_data.
+TYPES: tt_data TYPE STANDARD TABLE OF ty_data
+                                        WITH DEFAULT KEY.
+*
+DATA(itab_multi_comp) =
+  VALUE tt_data( ( kunnr = '123' name1 = 'ABCD' ort01 = 'LV' land1 = 'NV' )
+                 ( kunnr = '456' name1 = 'XYZ'  ort01 = 'LA' land1 = 'CA' )
+              ).
+
+*- filling data into an internal table with structure
+ DATA:lt_bukrs TYPE RANGE OF bukrs.
+ lt_bukrs = VALUE #( sign = 'I'  option = 'EQ'
+ ( low = '0001' )
+ ( low = '1000' )
+ ( low = '2000' )  ).
+
+*- declaring work area variable for loop
+ LOOP AT lt_matnr INTO DATA(ls_matnr).
+ ENDLOOP.
+*- declaring field symbol variable for loop
+ LOOP AT lt_bukrs ASSIGNING FIELD-SYMBOL(<ls_bukrs>).
+ ENDLOOP.
+
+*- declaring field symbol variable for read table
+ READ TABLE lt_matnr ASSIGNING FIELD-SYMBOL(<ls_matnr>) INDEX 3.
+ IF sy-subrc EQ 0.
+ ENDIF.
+*- getting same data with using table expression
+ DATA(wa_matnr) = lt_matnr[ 3 ].
+
+*- another examples of table expressions
+ DATA(wa_bukrs) = lt_bukrs[ low = '1000' ].
+
+*- check if line exists
+*does not return any sy-subrc value if the line is not there.
+*When table entry doesn’t exist, a catchable exception CX_SY_ITAB_LINE_NOT_FOUND is raised.
+ IF line_exists( lt_bukrs[ low = '1000'] ).
+   write: 'inside loop'.
+ ENDIF.
+
+*- iteration with 'FOR'
+ DATA(lt_material) = VALUE t_matnr( FOR ls_material IN lt_matnr ( ls_material ) ).
+
+*Directly change the content in Internal table.
+lt_matnr[ table_line = 100 ] = 10 .
+
+* change internal table content with exception.
+
+try.
+
+  lt_matnr[ table_line = 101 ] = 10101 .
+
+  CATCH cx_sy_itab_line_not_found.
+
+endtry.
+
+
+
+*- another use of 'FOR'
+ TYPES : BEGIN OF t_year ,
+   year TYPE numc4,
+   END OF t_year,
+   tt_year TYPE STANDARD TABLE OF t_year WITH EMPTY KEY.
+ DATA(lt_years)  = VALUE tt_year( FOR i = 2000 THEN i + 1 UNTIL i > 2020 ( year = i ) ).
+
+ LOOP AT lt_years ASSIGNING FIELD-SYMBOL(<ls_year>).
+   WRITE / <ls_year>-year.
+ ENDLOOP.
+
+*- using 'COND' for declaring new variables
+
+ DATA(lv_status) = 'S'.
+ DATA(lv_status_text) =
+   COND string(
+     WHEN lv_status = 'A' THEN 'Aborted'
+     WHEN lv_status = 'S' THEN 'Success'
+     WHEN lv_status = 'F' THEN 'Failed'
+     ELSE 'Status not found' ).
+
+ WRITE / lv_status_text.
+
+*- we can use 'SWITCH' for declaring conditional operators
+ DATA(lv_status_text2) = SWITCH string( lv_status
+     WHEN 'A' THEN 'Aborted'
+     WHEN 'S' THEN 'Success'
+     WHEN 'F' THEN 'Failed'
+     ELSE 'Status not found' ).
+
+ WRITE / lv_status_text2.
+
+*- CONCATENATE is easy
+ DATA(lv_time_string) = |Date: { sy-datum } / { sy-uzeit } Status: { lv_status_text } |.
+ WRITE / lv_time_string.
+
+*- you can use embedded expressions for many string operations
+ DATA:lv_ebeln TYPE ebeln VALUE '490001'.
+ DATA(lv_purc_no) = |{ lv_ebeln ALPHA = IN } |.
+ WRITE  / lv_purc_no.
+
+ DATA:lv_decimal TYPE p DECIMALS 10 VALUE '123.456789'.
+ DATA(lv_money) = |{ lv_decimal DECIMALS = 2 } |.
+ WRITE:lv_money.
+*- using case statement in database access
+ SELECT werks,
+        CASE WHEN land1 = 'DE' THEN 'IN'
+             ELSE 'OUT'
+        END AS country
+   FROM t001w INTO TABLE @DATA(lt_werks).
+
+ LOOP AT lt_werks  ASSIGNING FIELD-SYMBOL(<ls_werks>).
+   WRITE: / <ls_werks>-country,<ls_werks>-werks.
+ ENDLOOP.
+*- fill ranges/tables directly from select with default values
+DATA:lr_range TYPE RANGE OF matnr.
+
+ SELECT matnr, 'ORHAN' AS yaratan
+   FROM mara INTO TABLE
+   @DATA(lt_data1) .
+
+ SELECT 'I' AS sign ,'EQ' AS option, matnr AS low
+     FROM mara
+     INTO TABLE @lr_range UP TO 10 ROWS.
