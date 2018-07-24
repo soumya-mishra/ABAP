@@ -1,0 +1,65 @@
+TYPES :
+  BEGIN OF gty_contents,
+    name TYPE seu_name,
+    tlevel TYPE seu_level,
+    text TYPE seu_text,
+  END OF gty_contents.
+
+DATA :
+  gs_contents TYPE gty_contents,
+  gt_contents TYPE TABLE OF gty_contents.
+
+CLEAR gt_contents.
+CLEAR gs_contents.
+
+gs_contents-name = 'Contents'.
+gs_contents-tlevel = '01'.
+gs_contents-text = 'ABAP Objects'.
+APPEND gs_contents TO gt_contents.
+
+gs_contents-name = '1'.
+gs_contents-tlevel = '02'.
+gs_contents-text = 'Introduction'.
+APPEND gs_contents TO gt_contents.
+
+gs_contents-name = '1.1'.
+gs_contents-tlevel = '03'.
+gs_contents-text = 'What is ABAP?'.
+APPEND gs_contents TO gt_contents.
+
+gs_contents-name = '1.1.1'.
+gs_contents-tlevel = '04'.
+gs_contents-text = 'Evolution of ABAP'.
+APPEND gs_contents TO gt_contents.
+
+gs_contents-name = '2'.
+gs_contents-tlevel = '02'.
+gs_contents-text = 'Practical Introduction to ABAP'.
+APPEND gs_contents TO gt_contents.
+
+gs_contents-name = '2.1'.
+gs_contents-tlevel = '03'.
+gs_contents-text = 'Functionality of Sample Application'.
+APPEND gs_contents TO gt_contents.
+
+LOOP AT gt_contents INTO gs_contents.
+
+  gs_nodetab-name = gs_contents-name.
+  gs_nodetab-tlevel = gs_contents-tlevel.
+  gs_nodetab-nlength = '10'.
+  gs_nodetab-color = 4.
+  gs_nodetab-text = gs_contents-text.
+  gs_nodetab-tlength ='50'.
+  gs_nodetab-tcolor = 2.
+  APPEND gs_nodetab TO gt_nodetab.
+  CLEAR gs_nodetab.
+
+ENDLOOP.
+
+CALL FUNCTION 'RS_TREE_CONSTRUCT'
+  TABLES
+    nodetab = gt_nodetab.
+
+CALL FUNCTION 'RS_TREE_LIST_DISPLAY'
+  EXPORTING
+    use_control = 'L'.
