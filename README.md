@@ -1,3 +1,7 @@
+* [Inline Declaration](https://github.com/soumya-mishra/ABAP/blob/master/Inline%20declaration)
+* [ABAP New Features](https://github.com/soumya-mishra/ABAP/blob/master/New_features)
+
+
 ABAP can be organized in the layers (presentation, application, and database) of a three-tier client-server
 architecture in accordance with their tasks.
 
